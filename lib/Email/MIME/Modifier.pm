@@ -1,8 +1,8 @@
 package Email::MIME::Modifier;
-# $Id: Modifier.pm,v 1.3 2004/10/04 23:58:30 cwest Exp $
+# $Id: Modifier.pm,v 1.4 2004/12/23 21:41:46 cwest Exp $
 
 use vars qw[$VERSION];
-$VERSION = (qw$Revision: 1.3 $)[1];
+$VERSION = '1.41';
 
 package Email::MIME;
 use strict;
@@ -153,6 +153,7 @@ sub body_set {
     my $enc = $self->header('Content-Transfer-Encoding');
     $body = Email::MIME::Encodings::encode( $enc, $body )
        unless !$enc || $enc =~ /^(?:7bit|8bit|binary)$/i;
+    $self->{body_raw} = $body;
     $self->SUPER::body_set( $body );
 }
 
@@ -226,18 +227,27 @@ sub parts_set {
     my $body  = '';
 
     my $ct_header = parse_content_type($self->header('Content-Type'));
-    $ct_header->{attributes}->{boundary} ||= Email::MessageID->new->user;
-    my $bound = $ct_header->{attributes}->{boundary};
 
-    @{$ct_header}{qw[discrete composite]} = qw[multipart mixed]
-      unless grep { $ct_header->{discrete} eq $_ } qw[multipart message];
-    $self->_compose_content_type( $ct_header );
-
-    foreach my $part ( @{$parts} ) {
-        $body .= "$self->{mycrlf}--$bound$self->{mycrlf}";
-        $body .= $part->as_string;
+    if ( @{$parts} > 1 ) {
+        $ct_header->{attributes}->{boundary} ||= Email::MessageID->new->user;
+        my $bound = $ct_header->{attributes}->{boundary};
+        foreach my $part ( @{$parts} ) {
+            $body .= "$self->{mycrlf}--$bound$self->{mycrlf}";
+            $body .= $part->as_string;
+        }
+        $body .= "$self->{mycrlf}--$bound--$self->{mycrlf}";
+        @{$ct_header}{qw[discrete composite]} = qw[multipart mixed]
+          unless grep { $ct_header->{discrete} eq $_ } qw[multipart message];
+        $self->_compose_content_type( $ct_header );
+    } else {
+        $body .= $parts->[0]->body;
+        @{$ct_header}{qw[discrete composite]} = 
+          @{
+            parse_content_type($parts->[0]->header('Content-Type'))
+           }{qw[discrete composite]};
+        delete $ct_header->{attributes}->{boundary};
+        $self->_compose_content_type( $ct_header );
     }
-    $body .= "$self->{mycrlf}--$bound--$self->{mycrlf}";
 
     $self->body_set($body);
     $self->fill_parts;

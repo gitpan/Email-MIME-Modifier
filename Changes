@@ -1,3 +1,8 @@
+1.41    2004-12-23
+
+  - Enhanced detection for converting from single to multipart, and
+    back.
+
 1.3    2004-10-04
 
   - New methods parts_add() and walk_parts().
