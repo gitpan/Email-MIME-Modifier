@@ -1,4 +1,4 @@
-use Test::More qw[no_plan];
+use Test::More tests => 14;
 
 use_ok 'Email::MIME';
 use_ok 'Email::MIME::Modifier';

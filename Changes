@@ -1,3 +1,8 @@
+1.3    2004-10-04
+
+  - New methods parts_add() and walk_parts().
+  - No prereq on Test::Deep for testing (ADAMK).
+
 1.2    2004-07-09
 
   - boundary_set() now repackages children MIME parts so the object

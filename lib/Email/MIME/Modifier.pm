@@ -1,8 +1,8 @@
 package Email::MIME::Modifier;
-# $Id: Modifier.pm,v 1.2 2004/07/10 04:01:47 cwest Exp $
+# $Id: Modifier.pm,v 1.3 2004/10/04 23:58:30 cwest Exp $
 
 use vars qw[$VERSION];
-$VERSION = (qw$Revision: 1.2 $)[1];
+$VERSION = (qw$Revision: 1.3 $)[1];
 
 package Email::MIME;
 use strict;
@@ -241,6 +241,64 @@ sub parts_set {
 
     $self->body_set($body);
     $self->fill_parts;
+}
+
+=item parts_add
+
+  $email->parts_add( \@more_parts );
+
+Adds MIME parts onto the current MIME part. This is a simple extension
+of C<parts_set> to make our lives easier. It accepts an array reference
+of additional parts.
+
+=cut
+
+sub parts_add {
+    my ($self, $parts) = @_;
+    $self->parts_set([
+        $self->parts,
+        @{$parts},
+    ]);
+}
+
+=item walk_parts
+
+  $email->walk_parts(sub {
+      my $part = @_;
+      return if $part->parts > 1; # multipart
+      
+      if ( $part->content_type =~ m[text/html] ) {
+          my $body = $part->body;
+          $body =~ s/<link [^>]+>//; # simple filter example
+          $part->body_set( $body );
+      }
+  });
+
+Walks through all the MIME parts in a message and applies a callback to
+each. Accepts a code reference as its only argument. The code reference
+will be passed a single argument, the current MIME part within the
+top-level MIME object. All changes will be applied in place.
+
+=cut
+
+sub walk_parts {
+    my ($self, $callback) = @_;
+    
+    my $walk;
+    $walk = sub {
+        my ($part) = @_;
+        $callback->($part);
+        if ( $part->parts > 1 ) {
+            my @subparts;
+            for ( $part->parts ) {
+                push @subparts, $walk->($_);
+            }
+            $part->parts_set(\@subparts);
+        }
+        return $part;
+    };
+    
+    $walk->($self);
 }
 
 sub _compose_content_type {

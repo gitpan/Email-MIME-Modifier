@@ -85,6 +85,31 @@ DESCRIPTION
         was originally a single part, the "Content-Type" header will be
         changed to "multipart/mixed", and given a new boundary attribute.
 
+    parts_add
+          $email->parts_add( \@more_parts );
+
+        Adds MIME parts onto the current MIME part. This is a simple
+        extension of "parts_set" to make our lives easier. It accepts an
+        array reference of additional parts.
+
+    walk_parts
+          $email->walk_parts(sub {
+              my $part = @_;
+              return if $part->parts > 1; # multipart
+      
+              if ( $part->content_type =~ m[text/html] ) {
+                  my $body = $part->body;
+                  $body =~ s/<link [^>]+>//; # simple filter example
+                  $part->body_set( $body );
+              }
+          });
+
+        Walks through all the MIME parts in a message and applies a callback
+        to each. Accepts a code reference as its only argument. The code
+        reference will be passed a single argument, the current MIME part
+        within the top-level MIME object. All changes will be applied in
+        place.
+
 SEE ALSO
     Email::Simple, Email::MIME, Email::MIME::Encodings,
     Email::MIME::ContentType, perl.

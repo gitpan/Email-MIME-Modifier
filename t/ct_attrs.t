@@ -1,5 +1,4 @@
-use Test::More qw[no_plan];
-use Test::Deep;
+use Test::More tests => 10;
 
 use_ok 'Email::MIME';
 use_ok 'Email::MIME::Modifier';
@@ -9,7 +8,7 @@ my $email = Email::MIME->new(<<__MESSAGE__);
 Content-Type: text/plain; charset="us-ascii"
 __MESSAGE__
 
-cmp_deeply( parse_content_type($email->header('Content-Type')), {
+is_deeply( parse_content_type($email->header('Content-Type')), {
     discrete => 'text',
     composite => 'plain',
     attributes => {
@@ -19,7 +18,7 @@ cmp_deeply( parse_content_type($email->header('Content-Type')), {
 
 $email->charset_set( 'utf8' );
 
-cmp_deeply( parse_content_type($email->header('Content-Type')), {
+is_deeply( parse_content_type($email->header('Content-Type')), {
     discrete => 'text',
     composite => 'plain',
     attributes => {
@@ -29,7 +28,7 @@ cmp_deeply( parse_content_type($email->header('Content-Type')), {
 
 $email->charset_set( undef );
 
-cmp_deeply( parse_content_type($email->header('Content-Type')), {
+is_deeply( parse_content_type($email->header('Content-Type')), {
     discrete => 'text',
     composite => 'plain',
     attributes => {
@@ -38,7 +37,7 @@ cmp_deeply( parse_content_type($email->header('Content-Type')), {
 
 $email->format_set( 'flowed' );
 
-cmp_deeply( parse_content_type($email->header('Content-Type')), {
+is_deeply( parse_content_type($email->header('Content-Type')), {
     discrete => 'text',
     composite => 'plain',
     attributes => {
@@ -48,7 +47,7 @@ cmp_deeply( parse_content_type($email->header('Content-Type')), {
 
 $email->name_set( 'foo.txt' );
 
-cmp_deeply( parse_content_type($email->header('Content-Type')), {
+is_deeply( parse_content_type($email->header('Content-Type')), {
     discrete => 'text',
     composite => 'plain',
     attributes => {
@@ -63,7 +62,7 @@ is $email->header('Content-Type'),
 
 $email->boundary_set( 'marker' );
 
-cmp_deeply( parse_content_type($email->header('Content-Type')), {
+is_deeply( parse_content_type($email->header('Content-Type')), {
     discrete => 'text',
     composite => 'plain',
     attributes => {
