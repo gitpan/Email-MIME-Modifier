@@ -1,3 +1,8 @@
+1.2    2004-07-09
+
+  - boundary_set() now repackages children MIME parts so the object
+    stays in sync.
+
 1.1    2004-07-05
 
   - Initial version.

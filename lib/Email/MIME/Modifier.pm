@@ -1,8 +1,8 @@
 package Email::MIME::Modifier;
-# $Id: Modifier.pm,v 1.1 2004/07/05 18:49:24 cwest Exp $
+# $Id: Modifier.pm,v 1.2 2004/07/10 04:01:47 cwest Exp $
 
 use vars qw[$VERSION];
-$VERSION = (qw$Revision: 1.1 $)[1];
+$VERSION = (qw$Revision: 1.2 $)[1];
 
 package Email::MIME;
 use strict;
@@ -84,7 +84,7 @@ information is preserved when modifying an attribute.
 
 =cut
 
-foreach my $attr ( qw[charset name format boundary] ) {
+foreach my $attr ( qw[charset name format] ) {
     no strict 'refs';
     *{"$attr\_set"} = sub {
         my ($self, $value) = @_;
@@ -97,6 +97,20 @@ foreach my $attr ( qw[charset name format boundary] ) {
         $self->_compose_content_type( $ct_header );
         return $value;
     };
+}
+
+sub boundary_set {
+    my ($self, $value) = @_;
+    my $ct_header = parse_content_type( $self->header('Content-Type') );
+
+    if ( $value ) {
+        $ct_header->{attributes}->{boundary} = $value;
+    } else {
+        delete $ct_header->{attributes}->{boundary};
+    }
+    $self->_compose_content_type( $ct_header );
+    
+    $self->parts_set([$self->parts]) if $self->parts > 1;
 }
 
 =pod
