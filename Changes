@@ -1,3 +1,9 @@
+1.42    2004-12-23
+
+  - Automatically create Content-ID headers where they don't already
+    exist, for part children. This helps people tasked with the
+    horrible affliction of sending HTML email with embedded images.
+
 1.41    2004-12-23
 
   - Enhanced detection for converting from single to multipart, and

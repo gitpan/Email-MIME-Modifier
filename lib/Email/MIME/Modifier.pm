@@ -1,8 +1,10 @@
 package Email::MIME::Modifier;
-# $Id: Modifier.pm,v 1.4 2004/12/23 21:41:46 cwest Exp $
+# $Id: Modifier.pm,v 1.5 2004/12/23 22:58:49 cwest Exp $
 
 use vars qw[$VERSION];
-$VERSION = '1.41';
+$VERSION = '1.42';
+
+use Email::MIME;
 
 package Email::MIME;
 use strict;
@@ -17,7 +19,6 @@ Email::MIME::Modifier - Modify Email::MIME Objects Easily
 
 =head1 SYNOPSIS
 
-  use Email::MIME;
   use Email::MIME::Modifier;
   my $email = Email::MIME->new( join "", <> );
 
@@ -60,6 +61,7 @@ sub content_type_set {
     my $ct_header = parse_content_type( $self->header('Content-Type') );
     @{$ct_header}{qw[discrete composite]} = split m[/], $ct;
     $self->_compose_content_type( $ct_header );
+    $self->_reset_cids;
     return $ct;
 }
 
@@ -228,7 +230,7 @@ sub parts_set {
 
     my $ct_header = parse_content_type($self->header('Content-Type'));
 
-    if ( @{$parts} > 1 ) {
+    if ( @{$parts} > 1 ) { # setup multipart
         $ct_header->{attributes}->{boundary} ||= Email::MessageID->new->user;
         my $bound = $ct_header->{attributes}->{boundary};
         foreach my $part ( @{$parts} ) {
@@ -238,19 +240,19 @@ sub parts_set {
         $body .= "$self->{mycrlf}--$bound--$self->{mycrlf}";
         @{$ct_header}{qw[discrete composite]} = qw[multipart mixed]
           unless grep { $ct_header->{discrete} eq $_ } qw[multipart message];
-        $self->_compose_content_type( $ct_header );
-    } else {
+    } else { # setup singlepart
         $body .= $parts->[0]->body;
         @{$ct_header}{qw[discrete composite]} = 
           @{
             parse_content_type($parts->[0]->header('Content-Type'))
            }{qw[discrete composite]};
         delete $ct_header->{attributes}->{boundary};
-        $self->_compose_content_type( $ct_header );
     }
 
+    $self->_compose_content_type( $ct_header );
     $self->body_set($body);
     $self->fill_parts;
+    $self->_reset_cids;
 }
 
 =item parts_add
@@ -319,6 +321,33 @@ sub _compose_content_type {
     }
     $self->header_set('Content-Type' => $ct);
     $self->{ct} = $ct_header;
+}
+
+sub _get_cid {
+    Email::MessageID->new->address;
+}
+
+sub _reset_cids {
+    my ($self) = @_;
+
+    my $ct_header = parse_content_type($self->header('Content-Type'));
+
+    if ( $self->parts > 1 ) {
+        if ( $ct_header->{composite} eq 'alternative' ) {
+            my %cids;
+            $cids{$_->header('Content-ID')}++ for $self->parts;
+            return if keys(%cids) == 1;
+
+            my $cid = $self->_get_cid;
+            $_->header_set('Content-ID' => "<$cid>") for $self->parts;
+        } else {
+            foreach ( $self->parts ) {
+                my $cid = $self->_get_cid;
+                $_->header_set('Content-ID' => "<$cid>")
+                  unless $_->header('Content-ID');
+            }
+        }
+    }
 }
 
 1;
