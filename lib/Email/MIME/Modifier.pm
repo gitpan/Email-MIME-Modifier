@@ -1,8 +1,7 @@
 package Email::MIME::Modifier;
-# $Id: Modifier.pm,v 1.5 2004/12/23 22:58:49 cwest Exp $
 
 use vars qw[$VERSION];
-$VERSION = '1.42';
+$VERSION = '1.43';
 
 use Email::MIME;
 
@@ -240,12 +239,15 @@ sub parts_set {
         $body .= "$self->{mycrlf}--$bound--$self->{mycrlf}";
         @{$ct_header}{qw[discrete composite]} = qw[multipart mixed]
           unless grep { $ct_header->{discrete} eq $_ } qw[multipart message];
-    } else { # setup singlepart
+    } elsif (@$parts == 1) { # setup singlepart
         $body .= $parts->[0]->body;
         @{$ct_header}{qw[discrete composite]} = 
           @{
             parse_content_type($parts->[0]->header('Content-Type'))
            }{qw[discrete composite]};
+        $self->encoding_set(
+          $parts->[0]->header('Content-Transfer-Encoding')
+        );
         delete $ct_header->{attributes}->{boundary};
     }
 
@@ -316,8 +318,8 @@ sub walk_parts {
 sub _compose_content_type {
     my ($self, $ct_header) = @_;
     my $ct = join '/', @{$ct_header}{qw[discrete composite]};
-    while ( my ($attr, $val) = each %{$ct_header->{attributes}} ) {
-        $ct .= qq[; $attr="$val"];
+    for my $attr (sort keys %{$ct_header->{attributes}}) {
+        $ct .= qq[; $attr="$ct_header->{attributes}{$attr}"];
     }
     $self->header_set('Content-Type' => $ct);
     $self->{ct} = $ct_header;
