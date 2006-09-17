@@ -1,7 +1,7 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         Email-MIME-Modifier
-version:      1.43
+version:      1.440
 version_from: lib/Email/MIME/Modifier.pm
 installdirs:  site
 requires:
