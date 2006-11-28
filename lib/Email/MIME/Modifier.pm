@@ -1,7 +1,7 @@
 package Email::MIME::Modifier;
 
 use vars qw[$VERSION];
-$VERSION = '1.440';
+$VERSION = '1.441';
 
 use Email::MIME;
 
@@ -15,6 +15,12 @@ use Email::MessageID;
 =head1 NAME
 
 Email::MIME::Modifier - Modify Email::MIME Objects Easily
+
+=head1 VERSION
+
+version 1.441
+
+  $Id: /my/pep/Email-MIME-Modifier/trunk/lib/Email/MIME/Modifier.pm 28539 2006-11-28T01:49:38.991940Z rjbs  $
 
 =head1 SYNOPSIS
 
@@ -338,7 +344,12 @@ sub _reset_cids {
     if ( $self->parts > 1 ) {
         if ( $ct_header->{composite} eq 'alternative' ) {
             my %cids;
-            $cids{$_->header('Content-ID')}++ for $self->parts;
+            for my $part ($self->parts) {
+              my $cid = defined $part->header('Content-ID')
+                      ? $part->header('Content-ID')
+                      : '';
+              $cids{ $cid }++
+            }
             return if keys(%cids) == 1;
 
             my $cid = $self->_get_cid;
@@ -365,6 +376,12 @@ __END__
 
 L<Email::Simple>, L<Email::MIME>, L<Email::MIME::Encodings>,
 L<Email::MIME::ContentType>, L<perl>.
+
+=head1 PERL EMAIL PROJECT
+
+This module is maintained by the Perl Email Project
+
+L<http://emailproject.perl.org/wiki/Email::MIME>
 
 =head1 AUTHOR
 
