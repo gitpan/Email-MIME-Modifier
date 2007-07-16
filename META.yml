@@ -1,9 +1,9 @@
 --- #YAML:1.0
 name:                Email-MIME-Modifier
-version:             1.441
+version:             1.442
 abstract:            Modify Email::MIME Objects Easily
 license:             perl
-generated_by:        ExtUtils::MakeMaker version 6.31
+generated_by:        ExtUtils::MakeMaker version 6.32
 distribution_type:   module
 requires:     
     Email::MessageID:              1.2
